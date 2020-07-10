@@ -112,6 +112,16 @@ namespace FC.Bot.Characters
 			self.Characters.Remove(character);
 		}
 
+		public static void RemoveCharacter(this User self, uint characterId)
+		{
+			User.Character? character = self.GetCharacter(characterId);
+
+			if (character == null)
+				return;
+
+			self.Characters.Remove(character);
+		}
+
 		public static async Task<bool> IsVerified(this User.Character self, User owner)
 		{
 			if (self.IsVerified)

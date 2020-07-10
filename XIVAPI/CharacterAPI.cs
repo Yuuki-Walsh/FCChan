@@ -46,7 +46,7 @@ namespace XIVAPI
 		/// <summary>
 		/// Get Character data, this is parsed straight from Lodestone in real-time. The more data you request the slower the entire request will be.
 		/// </summary>
-		public static async Task<GetResponse> Get(uint? id, CharacterData dataFlags = CharacterData.ClassJobs)
+		public static async Task<GetResponse> Get(uint? id, CharacterData dataFlags = CharacterData.ClassJobs, string columns = "")
 		{
 			string data = string.Empty;
 
@@ -68,7 +68,7 @@ namespace XIVAPI
 			if (FlagsUtils.IsSet(dataFlags, CharacterData.ClassJobs))
 				data += "CJ,";
 
-			return await Request.Send<GetResponse>("/character/" + id + "?data=" + data + "&extended=true");
+			return await Request.Send<GetResponse>("/character/" + id + "?data=" + data + "&extended=true&columns=" + columns);
 		}
 
 		[Serializable]

@@ -36,51 +36,17 @@ namespace FC.Bot.Characters
 		{
 			User user = await UserService.GetUser(message.Author);
 			CharacterInfo character = await this.GetCharacterInfo(characterName, serverName);
-			User.Character? userCharacter = user.GetCharacter(character.Id);
 
-			if (userCharacter == null)
-			{
-				userCharacter = new User.Character();
-				userCharacter.FFXIVCharacterId = character.Id;
-				userCharacter.CharacterName = character.Name;
-				userCharacter.ServerName = character.Server;
-				userCharacter.IsVerified = false;
-				user.Characters.Add(userCharacter);
-				await UserService.SaveUser(user);
-			}
+			return await this.RecordCharacter(user, character);
+		}
 
-			if (userCharacter.IsVerified)
-			{
-				userCharacter.CharacterName = character.Name;
-				userCharacter.ServerName = character.Server;
-				await UserService.SaveUser(user);
+		[Command("IAm", Permissions.Everyone, "Records your character for use with the 'WhoIs' and 'WhoAmI' commands")]
+		public async Task<string> IAm(CommandMessage message, uint characterId)
+		{
+			User user = await UserService.GetUser(message.Author);
+			CharacterInfo character = await this.GetCharacterInfo(characterId);
 
-				return "Character linked!";
-			}
-			else
-			{
-				if (userCharacter.FFXIVCharacterVerification == null)
-				{
-					userCharacter.FFXIVCharacterVerification = Guid.NewGuid().ToString();
-					await UserService.SaveUser(user);
-				}
-
-				if (character.Bio?.Contains(userCharacter.FFXIVCharacterVerification) == true)
-				{
-					userCharacter.FFXIVCharacterId = character.Id;
-					userCharacter.CharacterName = character.Name;
-					userCharacter.ServerName = character.Server;
-					userCharacter.FFXIVCharacterVerification = null;
-					userCharacter.IsVerified = true;
-					await UserService.SaveUser(user);
-
-					return "Character linked! (You can now remove the Verification Id from your Character Profile)";
-				}
-				else
-				{
-					return "To verify character ownership, please place the following verification Id in your lodestone character profile: `" + userCharacter.FFXIVCharacterVerification + "`";
-				}
-			}
+			return await this.RecordCharacter(user, character);
 		}
 
 		[Command("IAmNot", Permissions.Everyone, "Removes your linked lodestone character")]
@@ -97,6 +63,15 @@ namespace FC.Bot.Characters
 		{
 			User user = await UserService.GetUser(message.Author);
 			user.RemoveCharacter(characterName, serverName);
+			await UserService.SaveUser(user);
+			return "Character unlinked!";
+		}
+
+		[Command("IAmNot", Permissions.Everyone, "Removes your linked lodestone character")]
+		public async Task<string> IAmNot(CommandMessage message, uint characterId)
+		{
+			User user = await UserService.GetUser(message.Author);
+			user.RemoveCharacter(characterId);
 			await UserService.SaveUser(user);
 			return "Character unlinked!";
 		}
@@ -304,6 +279,100 @@ namespace FC.Bot.Characters
 		{
 			CharacterInfo info = await this.GetCharacterInfo(characterName, serverName);
 			return info.GetAttributesEmbed();
+		}
+
+		[Command("ElementalLevel", Permissions.Everyone, "Shows current Elemental Level of a character")]
+		[Command("EL", Permissions.Everyone, "Shows current Elemental Level of a character")]
+		public async Task<Embed> ElementalLevel(CommandMessage message)
+		{
+			return await this.GetElementalLevel(message);
+		}
+
+		[Command("ElementalLevel", Permissions.Everyone, "Shows current Elemental Level of a character")]
+		[Command("EL", Permissions.Everyone, "Shows current Elemental Level of a character")]
+		public async Task<Embed> ElementalLevel(CommandMessage message, int characterIndex)
+		{
+			return await this.GetElementalLevel(message, characterIndex);
+		}
+
+		private async Task<Embed> GetElementalLevel(CommandMessage message, int? characterIndex = null)
+		{
+			User user = await UserService.GetUser(message.Author);
+			User.Character? defaultCharacter = user.GetDefaultCharacter();
+			if (defaultCharacter is null)
+				throw new UserException("No characters linked! Use `IAm` to link a character");
+
+			int index = 0;
+			if (characterIndex != null)
+			{
+				defaultCharacter = null;
+				foreach (User.Character character in user.Characters)
+				{
+					index++;
+
+					if (index == characterIndex)
+					{
+						defaultCharacter = character;
+					}
+				}
+
+				if (defaultCharacter is null)
+				{
+					throw new UserException("I couldn't find a character at index: " + characterIndex);
+				}
+			}
+
+			CharacterInfo info = await this.GetCharacterInfo(defaultCharacter.FFXIVCharacterId);
+			return await info.GetElementalLevelEmbed();
+		}
+
+		private async Task<string> RecordCharacter(User user, CharacterInfo character)
+		{
+			User.Character? userCharacter = user.GetCharacter(character.Id);
+
+			if (userCharacter == null)
+			{
+				userCharacter = new User.Character();
+				userCharacter.FFXIVCharacterId = character.Id;
+				userCharacter.CharacterName = character.Name;
+				userCharacter.ServerName = character.Server;
+				userCharacter.IsVerified = false;
+				user.Characters.Add(userCharacter);
+				await UserService.SaveUser(user);
+			}
+
+			if (userCharacter.IsVerified)
+			{
+				userCharacter.CharacterName = character.Name;
+				userCharacter.ServerName = character.Server;
+				await UserService.SaveUser(user);
+
+				return "Character linked!";
+			}
+			else
+			{
+				if (userCharacter.FFXIVCharacterVerification == null)
+				{
+					userCharacter.FFXIVCharacterVerification = Guid.NewGuid().ToString();
+					await UserService.SaveUser(user);
+				}
+
+				if (character.Bio?.Contains(userCharacter.FFXIVCharacterVerification) == true)
+				{
+					userCharacter.FFXIVCharacterId = character.Id;
+					userCharacter.CharacterName = character.Name;
+					userCharacter.ServerName = character.Server;
+					userCharacter.FFXIVCharacterVerification = null;
+					userCharacter.IsVerified = true;
+					await UserService.SaveUser(user);
+
+					return "Character linked! (You can now remove the Verification Id from your Character Profile)";
+				}
+				else
+				{
+					return "To verify character ownership, please place the following verification Id in your lodestone character profile: `" + userCharacter.FFXIVCharacterVerification + "`";
+				}
+			}
 		}
 
 		private async Task<CharacterInfo> GetCharacterInfo(IGuildUser guildUser)

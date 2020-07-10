@@ -112,6 +112,21 @@ namespace FC.Bot.Characters
 			return this.xivApiCharacter.GetAttributtes();
 		}
 
+		public async Task<Embed> GetElementalLevelEmbed()
+		{
+			XIVAPI.CharacterAPI.GetResponse charResponse = await XIVAPI.CharacterAPI.Get(this.Id, columns: "Character.ClassJobsElemental");
+
+			if (charResponse.Character == null)
+				throw new Exception("No character found.");
+
+			EmbedBuilder builder = new EmbedBuilder();
+
+			builder.Title = this.xivApiCharacter.Name;
+			builder.Description = "Elemental Level: " + (charResponse.Character?.GetElementalLevel() ?? 0);
+
+			return builder.Build();
+		}
+
 		private async Task UpdateXivApi()
 		{
 			XIVAPI.CharacterAPI.GetResponse charResponse = await XIVAPI.CharacterAPI.Get(this.Id, XIVAPI.CharacterAPI.CharacterData.ClassJobs | XIVAPI.CharacterAPI.CharacterData.FreeCompany);

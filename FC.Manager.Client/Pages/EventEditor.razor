@@ -219,7 +219,7 @@ else
 	{
 		this.Close();
 
-		bool confirmed = await Modal.Show<bool, ConfirmDelete>("Delete Event", "Are you sure you want to delete the event: " + this.evt.Name);
+		bool confirmed = await Modal.Show<bool, ConfirmDelete>("Delete Event", this.evt.Name);
 		if (confirmed)
 		{
 			await RPCService.Invoke("EventsService.DeleteEvent", this.evt.Id);

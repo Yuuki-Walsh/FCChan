@@ -160,6 +160,11 @@ namespace FC.Bot.Characters
 			return result;
 		}
 
+		public static int GetElementalLevel(this XIVAPICharacter self)
+		{
+			return self.ClassJobsElemental?.Level ?? 0;
+		}
+
 		private static bool AddItemlevel(Item? item, ref int total)
 		{
 			if (item == null)

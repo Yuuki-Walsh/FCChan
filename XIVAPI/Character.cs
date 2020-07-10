@@ -15,6 +15,7 @@ namespace XIVAPI
 		public string Avatar { get; set; } = string.Empty;
 		public string Bio { get; set; } = string.Empty;
 		public List<ClassJob>? ClassJobs { get; set; }
+		public ClassJob? ClassJobsElemental { get; set; }
 		public string DC { get; set; } = string.Empty;
 		public string FreeCompanyId { get; set; } = string.Empty;
 		public GearSet? GearSet { get; set; }
