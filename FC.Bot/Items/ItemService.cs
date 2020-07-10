@@ -85,7 +85,7 @@ namespace FC.Bot.Items
 					if (nm != null)
 						builder.Append(nm.ToStringEx());
 
-					embed.AddField("Best market board Prices", builder.ToString());
+					embed.AddField("Best Market Board prices:", builder.ToString());
 				}
 			}
 
